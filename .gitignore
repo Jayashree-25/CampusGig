@@ -1,0 +1,4 @@
+# 1. Dependencies (The heavy stuff)
+node_modules/
+*/node_modules/
+
