@@ -1,0 +1,80 @@
+version: "3.8"
+
+services:
+  # 1. The Database (Shared by all services for MVP)
+  postgres:
+    image: postgres:15-alpine
+    container_name: campus_postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=password123
+      - POSTGRES_DB=CampusGig
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # 2. The Traffic Controller
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "8000:8000"
+    depends_on:
+      - user-service
+      - gig-service
+      - payment-service
+      - chat-service
+
+  # 3. Microservices
+  user-service:
+    build: ./user-service
+    ports:
+      - "5001:5001"
+    environment:
+      - DATABASE_URL=postgresql://admin:password123@postgres:5432/CampusGig
+      - JWT_KEY=secretkey123
+    depends_on:
+      - postgres
+
+  gig-service:
+    build: ./gig-service
+    ports:
+      - "5002:5002"
+    environment:
+      - DATABASE_URL=postgresql://admin:password123@postgres:5432/CampusGig
+    depends_on:
+      - postgres
+
+  payment-service:
+    build: ./payment-service
+    ports:
+      - "5003:5003"
+    environment:
+      - DATABASE_URL=postgresql://admin:password123@postgres:5432/CampusGig
+      # Replace these with real test keys later
+      - RAZORPAY_KEY=rzp_test_123
+      - RAZORPAY_SECRET=secret_123
+    depends_on:
+      - postgres
+
+  chat-service:
+    build: ./chat-service
+    ports:
+      - "5004:5004"
+    environment:
+      - DATABASE_URL=postgresql://admin:password123@postgres:5432/CampusGig
+    depends_on:
+      - postgres
+
+  # 4. Frontend Client
+  client:
+    build: ./client
+    ports:
+      - "5173:5173"
+    stdin_open: true
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data:
