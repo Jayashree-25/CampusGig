@@ -32,7 +32,7 @@ services:
       - "5001:5001"
     environment:
       - DATABASE_URL=postgresql://admin:password123@postgres:5432/CampusGig
-      - JWT_KEY=secretkey123
+      - JWT_SECRET=super_secret_key_123
     depends_on:
       - postgres
 
