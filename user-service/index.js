@@ -3,6 +3,7 @@ const { Pool } = require("pg");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
+const verifyToken = require("./middleware/authMiddleware");
 require("dotenv").config();
 
 const app = express();
@@ -117,6 +118,14 @@ app.post("/login", async (req, res) => {
     console.error(err.message);
     res.status(500).json({ error: "Server Error" });
   }
+});
+
+// 4. PROTECTED ROUTE (Only for logged-in users)
+app.get("/profile", verifyToken, (req, res) => {
+  res.json({ 
+    message: "This is a protected route!", 
+    user: req.user // This comes from the token!
+  });
 });
 
 app.listen(PORT, () => {
