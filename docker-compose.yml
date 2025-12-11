@@ -53,8 +53,9 @@ services:
     environment:
       - DATABASE_URL=postgresql://admin:password123@postgres:5432/CampusGig
       # Replace these with real test keys later
-      - RAZORPAY_KEY=rzp_test_123
-      - RAZORPAY_SECRET=secret_123
+      - RAZORPAY_KEY_ID=rzp_test_1DP5mmOlF5G5ag  
+      - RAZORPAY_KEY_SECRET=s4rkPBQcn6205
+      - JWT_SECRET=secretkey123
     depends_on:
       - postgres
 
