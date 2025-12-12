@@ -7,24 +7,36 @@ CampusGig is a closed-loop freelance marketplace designed specifically for colle
 - Minimalist: Features direct payments (no complex escrow), instant chat, and simple listings.
 - Microservices: Built on a scalable, decoupled architecture for Auth, Gigs, Payments, and Chat.
 
+---
+
 ## 🛠️ Tech Stack
-- Frontend: React.js (Vite), TailwindCSS, Axios.
-- Backend: Node.js, Express.js.
-- Database: PostgreSQL (Relational Model).
-- Real-Time: Socket.io.
-- Payments: Razorpay (Direct Integration).
-- DevOps: Docker & Docker Compose.
+
+| Component | Technology |
+| :--- | :--- |
+| **Frontend** | React.js (Vite), TailwindCSS, Axios |
+| **Backend** | Node.js, Express.js |
+| **Database** | PostgreSQL (Relational Model) |
+| **Real-Time** | Socket.io |
+| **Payments** | Razorpay (Direct Integration) |
+| **DevOps** | Docker, Docker Compose |
+| **Gateway** | Express HTTP Proxy |
+
+---
 
 ## 🏗️ System Architecture
-The system follows a Microservices Architecture where traffic is routed through a central API Gateway.
-| Service         | Internal Port | Docker Port | Responsibility           |
-|-----------------|---------------|-------------|---------------------------|
-| API Gateway     | 8000          | 8000        | Routing, Basic Auth       |
-| User Service    | 5001          | 5001        | Authentication, Profiles  |
-| Gig Service     | 5002          | 5002        | Gig Listings, Reviews     |
-| Payment Service | 5003          | 5003        | Razorpay Orders           |
-| Chat Service    | 5004          | 5004        | Real-Time Messaging       |
-| PostgreSQL      | 5432          | 5432        | Shared Relational DB      |
+
+The system uses a **Microservices Architecture** where all client requests are routed through a central **API Gateway**.
+
+| Service | Internal Port | Docker Port | Responsibility |
+| :--- | :--- | :--- | :--- |
+| **API Gateway** | 8000 | `8000` | Central Routing, Basic Auth Checks |
+| **User Service** | 5001 | `5001` | Authentication, User Profiles |
+| **Gig Service** | 5002 | `5002` | Gig Listings, Search, Reviews |
+| **Payment Service** | 5003 | `5003` | Razorpay Order Management |
+| **Chat Service** | 5004 | `5004` | Real-Time Messaging (Socket.io) |
+| **PostgreSQL** | 5432 | `5432` | Shared Relational Database |
+
+---
 
 ### API Gateway Routes
 - /api/auth & /api/users → User Service
