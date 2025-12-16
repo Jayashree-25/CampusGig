@@ -2,7 +2,7 @@ const express = require("express");
 const { Pool } = require("pg");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const cors = require("cors");
+//const cors = require("cors");
 const verifyToken = require("./middleware/authMiddleware");
 require("dotenv").config();
 
@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 5001;
 const JWT_SECRET = process.env.JWT_SECRET || "fallback_secret_key"; // Fallback secret if not in .env (for safety)
 
 // Middleware
-app.use(cors());
+//app.use(cors());
 app.use(express.json());
 
 // --- Database Connection ---
