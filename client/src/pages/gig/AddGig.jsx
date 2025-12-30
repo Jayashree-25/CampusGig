@@ -1,26 +1,55 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Clock, Tag, IndianRupee, Image as ImageIcon, Type, AlignLeft } from 'lucide-react';
+import { Clock, Tag, IndianRupee, Image as ImageIcon, Type, AlignLeft, UploadCloud } from 'lucide-react';
 
 function AddGig() {
+  // Removed cover_image from formData as we handle it with a separate 'file' state
   const [formData, setFormData] = useState({
-    title: '', category: 'Tech', price: '', desc: '', deliveryTime: '', cover_image: ''
+    title: '', category: 'Tech', price: '', desc: '', deliveryTime: ''
   });
+  const [file, setFile] = useState(null); // New state for the file
+  
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // New function to handle file selection
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // 1. Create FormData object
+    const data = new FormData();
+    data.append("title", formData.title);
+    data.append("category", formData.category);
+    data.append("price", formData.price);
+    data.append("description", formData.desc); // Backend expects 'description'
+    data.append("deliveryTime", formData.deliveryTime);
+    
+    // 2. Append the file if it exists
+    if (file) {
+      data.append("coverImage", file); // Key must match backend: upload.single("coverImage")
+    }
+
     try {
-      await axios.post('http://localhost:8000/api/gigs', formData, { withCredentials: true });
+      // 3. Send with multipart/form-data header
+      await axios.post('http://localhost:8000/api/gigs', data, { 
+        withCredentials: true,
+        headers: { "Content-Type": "multipart/form-data" },
+      });
       alert('Service Published! 🚀');
       navigate('/gigs');
     } catch (err) {
-      alert('Login required to post a gig');
+      console.error(err);
+      alert('Login required or error posting gig');
     }
   };
 
@@ -63,6 +92,34 @@ function AddGig() {
               <option value="Writing">Assignments</option>
             </select>
           </div>
+        </div>
+
+        {/* NEW: Cover Image Upload Field */}
+        <div className="mt-4 sm:mt-6 md:mt-8 space-y-1.5 sm:space-y-2">
+           <label className="flex items-center gap-1 sm:gap-2 text-[8px] sm:text-[9px] md:text-[10px] font-black uppercase tracking-tighter md:tracking-widest text-gray-400 ml-1 sm:ml-2">
+              <ImageIcon size={12} className="sm:w-3 sm:h-3 md:w-[14px] md:h-[14px] text-cyan-400" /> Cover Image
+           </label>
+           <div className="relative w-full group">
+             <input 
+               type="file" 
+               accept="image/*"
+               onChange={handleFileChange}
+               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+             />
+             <div className="w-full bg-white/5 border border-dashed border-white/20 rounded-lg sm:rounded-2xl md:rounded-3xl p-4 sm:p-6 flex flex-col items-center justify-center text-gray-400 group-hover:border-cyan-400/50 group-hover:bg-cyan-400/5 transition-all">
+               {file ? (
+                 <div className="flex items-center gap-2 text-cyan-400">
+                    <ImageIcon size={20} />
+                    <span className="text-sm font-medium">{file.name}</span>
+                 </div>
+               ) : (
+                 <>
+                   <UploadCloud size={24} className="mb-2 text-gray-500" />
+                   <span className="text-xs uppercase tracking-widest font-bold">Click to Upload Cover</span>
+                 </>
+               )}
+             </div>
+           </div>
         </div>
 
         {/* Description */}
