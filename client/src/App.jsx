@@ -14,6 +14,7 @@ import AddGig from './pages/gig/AddGig';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import Profile from './pages/Profile';
+import Wallet from './pages/Wallet';
 
 function App() {
   const location = useLocation();
@@ -41,6 +42,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/wallet" element={<Wallet />} />
               <Route path="*" element={<Home />} />
             </Routes>
           </AnimatePresence>
