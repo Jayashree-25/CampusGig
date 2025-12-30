@@ -1,3 +1,77 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html {
+    /* Choti screens (250px) ke liye optimized font size */
+    font-size: 14px; 
+  }
+  @media (min-width: 640px) {
+    html { font-size: 16px; }
+  }
+}
+
+body {
+  margin: 0;
+  /* Dark Navy-Black background for Teal to pop */
+  background-color: #020617; 
+  color: white;
+  overflow-x: hidden;
+  font-family: 'Plus Jakarta Sans', sans-serif; /* Modern professional font */
+}
+
+/* 250px Responsive Container Fix */
+@media (max-width: 300px) {
+  .max-w-7xl, .max-w-6xl, .max-w-5xl { 
+    padding-left: 0.75rem; 
+    padding-right: 0.75rem; 
+  }
+}
+
+/* --- CUSTOM TEAL UTILITIES --- */
+
+@layer components {
+  /* Teal Glow Text */
+  .text-teal-glow {
+    text-shadow: 0 0 15px rgba(20, 184, 166, 0.4);
+  }
+
+  /* Custom Scrollbar for Chat & Marketplace */
+  ::-webkit-scrollbar {
+    width: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(20, 184, 166, 0.2);
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(20, 184, 166, 0.5);
+  }
+}
+
+/* --- 3D LIGHT STREAK ANIMATION (Video Style) --- */
+.streak-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Light Streak logic inspired by your uploaded video */
+.light-streak {
+  position: absolute;
+  width: 1000px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #14b8a6, transparent);
+  transform: rotate(-35deg);
+  opacity: 0.3;
+  filter: blur(2px);
+}
