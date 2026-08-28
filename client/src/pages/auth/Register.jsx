@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { UserPlus, Mail, Lock, User } from "lucide-react";
-import axios from "axios";
+import { useAuth } from "../../context/AuthContext";
 
 const Register = () => {
   const navigate = useNavigate();
+  const { register } = useAuth();
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -27,18 +28,9 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post(
-        "http://localhost:8000/api/auth/register",
-        formData
-      );
-
-      console.log("Registration successful:", response.data);
-      alert("Account created successfully! Please login.");
-      
-      // Redirect to login page
+      await register(formData.username, formData.email, formData.password);
       navigate("/login");
     } catch (err) {
-      console.error("Registration error:", err);
       setError(err.response?.data?.error || "Registration failed. Try again.");
     } finally {
       setLoading(false);
