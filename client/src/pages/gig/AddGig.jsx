@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import apiClient from '../../lib/apiClient';
 import { Clock, Tag, IndianRupee, Image as ImageIcon, Type, AlignLeft, UploadCloud } from 'lucide-react';
 
 function AddGig() {
@@ -40,12 +40,10 @@ function AddGig() {
     }
 
     try {
-      // 3. Send with multipart/form-data header and JWT token
-      const token = localStorage.getItem("token");
-      await axios.post('http://localhost:8000/api/gigs', data, { 
+      // 3. Send with multipart/form-data header (JWT auto-attached by apiClient interceptor)
+      await apiClient.post('/gigs', data, { 
         headers: { 
           "Content-Type": "multipart/form-data",
-          ...(token && { Authorization: `Bearer ${token}` }),
         },
       });
       alert('Service Published! 🚀');
