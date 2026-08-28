@@ -1,7 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import axios from "axios";
-
-const API_URL = "http://localhost:8000/api";
+import apiClient from "../lib/apiClient";
 
 const AuthContext = createContext(null);
 
@@ -27,11 +25,9 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   }, []);
 
-  const refreshUser = useCallback(async (existingToken) => {
+  const refreshUser = useCallback(async () => {
     try {
-      const response = await axios.get(`${API_URL}/auth/profile`, {
-        headers: { Authorization: `Bearer ${existingToken}` },
-      });
+      const response = await apiClient.get("/auth/profile");
       const profile = response.data.user;
       setUser({
         id: profile.id,
@@ -46,7 +42,7 @@ export const AuthProvider = ({ children }) => {
   }, [logout]);
 
   const login = async (email, password) => {
-    const response = await axios.post(`${API_URL}/auth/login`, {
+    const response = await apiClient.post("/auth/login", {
       email,
       password,
     });
@@ -59,7 +55,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (username, email, password) => {
-    const response = await axios.post(`${API_URL}/auth/register`, {
+    const response = await apiClient.post("/auth/register", {
       username,
       email,
       password,
@@ -72,7 +68,7 @@ export const AuthProvider = ({ children }) => {
       const storedToken = localStorage.getItem("token");
       if (storedToken) {
         setToken(storedToken);
-        await refreshUser(storedToken);
+        await refreshUser();
       }
       setLoading(false);
     };
