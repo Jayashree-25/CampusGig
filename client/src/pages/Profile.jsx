@@ -1,15 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { User, Mail, Calendar, Shield, LogOut } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const Profile = () => {
-  // 🚧 MOCK DATA: We will replace this with real API data later
-  const user = {
-    name: "CampusUser",
-    email: "student@university.edu",
-    role: "Student Freelancer",
-    joined: "December 2024"
-  };
+  const { user, logout } = useAuth();
+
+  const displayName = user?.username || "CampusUser";
+  const displayEmail = user?.email || "student@university.edu";
 
   return (
     <div className="min-h-screen bg-[#030712] text-white pt-32 px-4 sm:px-6">
@@ -42,9 +40,9 @@ const Profile = () => {
               </div>
             </div>
 
-            <h2 className="text-2xl font-black uppercase tracking-wide">{user.name}</h2>
+            <h2 className="text-2xl font-black uppercase tracking-wide">{displayName}</h2>
             <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-cyan-400/10 border border-cyan-400/20 text-cyan-400 text-[10px] font-black uppercase tracking-wider mt-2">
-              <Shield size={10} /> {user.role}
+              <Shield size={10} /> Student Freelancer
             </span>
 
             {/* Info Grid */}
@@ -56,7 +54,7 @@ const Profile = () => {
                 </div>
                 <div>
                   <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Email Address</p>
-                  <p className="font-semibold text-sm sm:text-base">{user.email}</p>
+                  <p className="font-semibold text-sm sm:text-base">{displayEmail}</p>
                 </div>
               </div>
 
@@ -66,14 +64,14 @@ const Profile = () => {
                 </div>
                 <div>
                   <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Member Since</p>
-                  <p className="font-semibold text-sm sm:text-base">{user.joined}</p>
+                  <p className="font-semibold text-sm sm:text-base">December 2024</p>
                 </div>
               </div>
 
             </div>
 
             {/* Logout Button (Visual Only for now) */}
-            <button className="mt-8 w-full py-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 font-black uppercase tracking-widest text-xs hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-2 group">
+            <button onClick={logout} className="mt-8 w-full py-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 font-black uppercase tracking-widest text-xs hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-2 group">
               <LogOut size={16} className="group-hover:-translate-x-1 transition-transform" />
               Sign Out
             </button>
