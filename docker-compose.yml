@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   # 1. The Database
   postgres:
@@ -13,6 +11,12 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   # 2. The Traffic Controller
   api-gateway:
@@ -20,10 +24,14 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - user-service
-      - gig-service
-      - payment-service
-      - chat-service
+      user-service:
+        condition: service_started
+      gig-service:
+        condition: service_started
+      payment-service:
+        condition: service_started
+      chat-service:
+        condition: service_started
 
   # 3. Microservices
   user-service:
@@ -34,7 +42,8 @@ services:
       - DATABASE_URL=${DATABASE_URL}
       - JWT_SECRET=${JWT_SECRET}
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
   gig-service:
     build: ./gig-service
@@ -44,7 +53,8 @@ services:
       - DATABASE_URL=${DATABASE_URL}
       - JWT_SECRET=${JWT_SECRET}
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
   payment-service:
     build: ./payment-service
@@ -56,7 +66,8 @@ services:
       - RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET}
       - JWT_SECRET=${JWT_SECRET}
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
   chat-service:
     build: ./chat-service
@@ -65,7 +76,8 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL}
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
   # 4. Frontend Client
   client:
@@ -76,6 +88,9 @@ services:
     volumes:
       - ./client:/app
       - /app/node_modules
+    depends_on:
+      api-gateway:
+        condition: service_started
 
 volumes:
   postgres_data:
