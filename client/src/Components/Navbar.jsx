@@ -1,22 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Zap, User, LogOut, Mail, Settings } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const { isAuthenticated, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  useEffect(() => {
-    // Check if user is logged in by checking for token in localStorage
-    const token = localStorage.getItem('token');
-    setIsLoggedIn(!!token);
-  }, []);
 
   const handleLogout = () => {
-    // Clear authentication data
-    localStorage.removeItem('token');
-    setIsLoggedIn(false);
+    logout();
     setDropdownOpen(false);
     navigate('/login');
   };
@@ -36,7 +29,7 @@ const Navbar = () => {
         </Link>
 
         {/* Navigation - Show only when logged in */}
-        {isLoggedIn && (
+        {isAuthenticated && (
           <div className="hidden lg:flex items-center gap-4 xl:gap-10">
             <Link to="/gigs" className="text-[8px] sm:text-[9px] md:text-[10px] font-black uppercase tracking-[0.1em] md:tracking-[0.2em] text-gray-400 hover:text-cyan-400 transition-colors">Marketplace</Link>
             <Link to="/orders" className="text-[8px] sm:text-[9px] md:text-[10px] font-black uppercase tracking-[0.1em] md:tracking-[0.2em] text-gray-400 hover:text-cyan-400 transition-colors">Orders</Link>
@@ -46,7 +39,7 @@ const Navbar = () => {
 
         {/* Buttons */}
         <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0">
-          {isLoggedIn ? (
+          {isAuthenticated ? (
             <>
               <button 
                 onClick={() => navigate('/add-gig')}
