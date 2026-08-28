@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { LogIn, Mail, Lock } from "lucide-react";
-import axios from "axios";
+import { useAuth } from "../../context/AuthContext";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -26,25 +27,9 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post(
-        "http://localhost:8000/api/auth/login",
-        formData
-      );
-
-      console.log("Login successful:", response.data);
-
-      // Store token in localStorage
-      localStorage.setItem("token", response.data.token);
-
-      // Store user info (optional but helpful)
-      localStorage.setItem("user", JSON.stringify(response.data.user));
-
-      alert("Login successful! Welcome back.");
-
-      // Redirect to home page
+      await login(formData.email, formData.password);
       navigate("/");
     } catch (err) {
-      console.error("Login error:", err);
       setError(err.response?.data?.error || "Login failed. Please try again.");
     } finally {
       setLoading(false);
