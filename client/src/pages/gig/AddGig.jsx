@@ -40,10 +40,13 @@ function AddGig() {
     }
 
     try {
-      // 3. Send with multipart/form-data header
+      // 3. Send with multipart/form-data header and JWT token
+      const token = localStorage.getItem("token");
       await axios.post('http://localhost:8000/api/gigs', data, { 
-        withCredentials: true,
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: { 
+          "Content-Type": "multipart/form-data",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
       });
       alert('Service Published! 🚀');
       navigate('/gigs');
