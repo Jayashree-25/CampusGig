@@ -120,12 +120,51 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// 4. PROTECTED ROUTE (Only for logged-in users)
-app.get("/profile", verifyToken, (req, res) => {
-  res.json({ 
-    message: "This is a protected route!", 
-    user: req.user // This comes from the token!
-  });
+// 4. GET PROFILE (Protected - queries DB for full user data)
+app.get("/profile", verifyToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT id, username, email, created_at FROM users WHERE id = $1",
+      [req.user.id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.json({ user: result.rows[0] });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: "Server Error" });
+  }
+});
+
+// 5. UPDATE PROFILE (Protected - updates own profile)
+app.put("/profile", verifyToken, async (req, res) => {
+  try {
+    const { username, email } = req.body;
+
+    if (!username || !email) {
+      return res.status(400).json({ error: "Username and email are required" });
+    }
+
+    // Check for duplicate username/email (excluding current user)
+    const existing = await pool.query(
+      "SELECT id FROM users WHERE (username = $1 OR email = $2) AND id != $3",
+      [username, email, req.user.id]
+    );
+    if (existing.rows.length > 0) {
+      return res.status(400).json({ error: "Username or email already taken" });
+    }
+
+    const result = await pool.query(
+      "UPDATE users SET username = $1, email = $2 WHERE id = $3 RETURNING id, username, email, created_at",
+      [username, email, req.user.id]
+    );
+
+    res.json({ message: "Profile updated!", user: result.rows[0] });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: "Server Error" });
+  }
 });
 
 app.listen(PORT, () => {
