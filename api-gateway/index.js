@@ -30,6 +30,12 @@ app.use('/api/gigs', createProxyMiddleware({
   pathRewrite: { '^/api/gigs': '' }
 }));
 
+app.use('/api/gig-uploads', createProxyMiddleware({ 
+  target: 'http://gig-service:5002', 
+  changeOrigin: true,
+  pathRewrite: { '^/api/gig-uploads': '/uploads' }
+}));
+
 app.use('/api/orders', createProxyMiddleware({ 
   target: 'http://payment-service:5003', 
   changeOrigin: true,
