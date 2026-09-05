@@ -54,7 +54,22 @@ app.get("/", async (req, res) => {
   }
 });
 
-// 2. CREATE A GIG (Protected + Image Upload)
+// 2. GET SINGLE GIG (Public)
+app.get("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query("SELECT * FROM gigs WHERE id = $1", [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Gig not found" });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: "Server Error" });
+  }
+});
+
+// 3. CREATE A GIG (Protected + Image Upload)
 // We add 'upload.single("coverImage")' middleware here
 app.post("/", verifyToken, upload.single("coverImage"), async (req, res) => {
   try {
