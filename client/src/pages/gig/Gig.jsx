@@ -1,15 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, User } from 'lucide-react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { ArrowLeft, User, ShoppingCart, Loader2, CheckCircle } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import apiClient from '../../lib/apiClient';
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
 const Gig = () => {
   const { id } = useParams();
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [gig, setGig] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [ordering, setOrdering] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState(false);
+  const [orderError, setOrderError] = useState('');
 
   useEffect(() => {
     const fetchGig = async () => {
@@ -29,9 +35,28 @@ const Gig = () => {
     fetchGig();
   }, [id]);
 
+  const handleOrder = async () => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    setOrdering(true);
+    setOrderError('');
+    try {
+      await apiClient.post('/orders', { gig_id: gig.id });
+      setOrderSuccess(true);
+    } catch (err) {
+      setOrderError(err.response?.data?.error || 'Failed to place order');
+    } finally {
+      setOrdering(false);
+    }
+  };
+
   const imageUrl = gig?.cover_image
     ? `${API_BASE.replace('/api', '')}${gig.cover_image}`
     : null;
+
+  const isOwnGig = isAuthenticated && user && gig && user.id === gig.freelancer_id;
 
   if (loading) {
     return (
@@ -87,6 +112,44 @@ const Gig = () => {
                 <p className="text-sm font-semibold text-white">Seller #{gig.freelancer_id}</p>
               </div>
             </div>
+          </div>
+
+          {/* Order Section */}
+          <div className="border-t border-white/10 mt-6 pt-6">
+            {orderSuccess ? (
+              <div className="flex items-center gap-3 p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
+                <CheckCircle size={20} className="text-green-400" />
+                <div>
+                  <p className="text-green-400 font-bold text-sm">Order placed successfully!</p>
+                  <Link to="/orders" className="text-cyan-400 text-xs font-bold uppercase tracking-wider hover:underline">
+                    View My Orders →
+                  </Link>
+                </div>
+              </div>
+            ) : isOwnGig ? (
+              <div className="p-4 bg-white/5 border border-white/10 rounded-xl text-center">
+                <p className="text-gray-400 text-sm font-bold">This is your gig</p>
+              </div>
+            ) : (
+              <>
+                {orderError && (
+                  <div className="mb-3 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-xs text-center">
+                    {orderError}
+                  </div>
+                )}
+                <button
+                  onClick={handleOrder}
+                  disabled={ordering}
+                  className="w-full py-4 rounded-xl bg-cyan-400 text-black font-black uppercase tracking-widest text-xs hover:bg-white transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {ordering ? (
+                    <><Loader2 size={16} className="animate-spin" /> Placing Order...</>
+                  ) : (
+                    <><ShoppingCart size={16} /> {!isAuthenticated ? 'Login to Order' : 'Place Order'}</>
+                  )}
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
