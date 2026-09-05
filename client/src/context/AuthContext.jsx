@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import apiClient from "../lib/apiClient";
+import apiClient, { setOnAuthFailure } from "../lib/apiClient";
 
 const AuthContext = createContext(null);
 
@@ -24,6 +24,11 @@ export const AuthProvider = ({ children }) => {
     setToken(null);
     setUser(null);
   }, []);
+
+  useEffect(() => {
+    setOnAuthFailure(logout);
+    return () => setOnAuthFailure(null);
+  }, [logout]);
 
   const refreshUser = useCallback(async () => {
     try {
