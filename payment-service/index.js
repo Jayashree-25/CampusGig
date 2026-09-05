@@ -192,6 +192,162 @@ app.post("/withdraw", verifyToken, async (req, res) => {
   }
 });
 
+// 5. CREATE APPLICATION-LEVEL ORDER (No Razorpay)
+app.post("/", verifyToken, async (req, res) => {
+  try {
+    const { gig_id } = req.body;
+    const clientId = req.user.id;
+
+    if (!gig_id) return res.status(400).json({ error: "Gig ID is required" });
+
+    // Fetch gig from DB
+    const gigResult = await pool.query("SELECT * FROM gigs WHERE id = $1", [gig_id]);
+    if (gigResult.rows.length === 0) {
+      return res.status(404).json({ error: "Gig not found" });
+    }
+
+    const gig = gigResult.rows[0];
+
+    // Self-buy prevention
+    if (gig.freelancer_id === clientId) {
+      return res.status(403).json({ error: "Cannot order your own gig" });
+    }
+
+    // Derive amount from gig price (never trust frontend)
+    const amount = gig.price;
+
+    const result = await pool.query(
+      "INSERT INTO orders (gig_id, client_id, amount, status) VALUES ($1, $2, $3, 'pending') RETURNING *",
+      [gig_id, clientId, amount]
+    );
+
+    res.status(201).json({ message: "Order created!", order: result.rows[0] });
+  } catch (err) {
+    console.error("Error creating order:", err);
+    res.status(500).json({ error: "Failed to create order" });
+  }
+});
+
+// 6. GET BUYER'S ORDERS
+app.get("/", verifyToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT orders.*, gigs.title AS gig_title, gigs.freelancer_id
+       FROM orders
+       JOIN gigs ON orders.gig_id = gigs.id
+       WHERE orders.client_id = $1
+       ORDER BY orders.created_at DESC`,
+      [req.user.id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error fetching orders:", err);
+    res.status(500).json({ error: "Failed to fetch orders" });
+  }
+});
+
+// 7. GET SELLER'S INCOMING ORDERS (must be before /:id)
+app.get("/seller", verifyToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT orders.*, gigs.title AS gig_title, users.username AS buyer_username
+       FROM orders
+       JOIN gigs ON orders.gig_id = gigs.id
+       JOIN users ON orders.client_id = users.id
+       WHERE gigs.freelancer_id = $1
+       ORDER BY orders.created_at DESC`,
+      [req.user.id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error fetching seller orders:", err);
+    res.status(500).json({ error: "Failed to fetch orders" });
+  }
+});
+
+// 8. GET ORDER DETAIL
+app.get("/:id", verifyToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT orders.*, gigs.title AS gig_title, gigs.freelancer_id,
+              buyers.username AS buyer_username
+       FROM orders
+       JOIN gigs ON orders.gig_id = gigs.id
+       JOIN users AS buyers ON orders.client_id = buyers.id
+       WHERE orders.id = $1`,
+      [req.params.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    const order = result.rows[0];
+
+    // Authorization: must be buyer or seller
+    if (order.client_id !== req.user.id && order.freelancer_id !== req.user.id) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    res.json(order);
+  } catch (err) {
+    console.error("Error fetching order:", err);
+    res.status(500).json({ error: "Failed to fetch order" });
+  }
+});
+
+// 9. SELLER UPDATES ORDER STATUS
+app.put("/:id/status", verifyToken, async (req, res) => {
+  try {
+    const { status } = req.body;
+    const validStatuses = ["in_progress", "completed", "cancelled"];
+
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({ error: "Invalid status. Allowed: in_progress, completed, cancelled" });
+    }
+
+    // Fetch order + gig
+    const orderResult = await pool.query(
+      `SELECT orders.*, gigs.freelancer_id
+       FROM orders JOIN gigs ON orders.gig_id = gigs.id
+       WHERE orders.id = $1`,
+      [req.params.id]
+    );
+
+    if (orderResult.rows.length === 0) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    const order = orderResult.rows[0];
+
+    // Seller ownership check
+    if (order.freelancer_id !== req.user.id) {
+      return res.status(403).json({ error: "Not authorized to update this order" });
+    }
+
+    // Validate status transitions
+    const allowedTransitions = {
+      pending: ["in_progress", "cancelled"],
+      in_progress: ["completed", "cancelled"],
+    };
+
+    const allowed = allowedTransitions[order.status];
+    if (!allowed || !allowed.includes(status)) {
+      return res.status(400).json({ error: `Cannot transition from '${order.status}' to '${status}'` });
+    }
+
+    const updated = await pool.query(
+      "UPDATE orders SET status = $1 WHERE id = $2 RETURNING *",
+      [status, req.params.id]
+    );
+
+    res.json({ message: "Status updated!", order: updated.rows[0] });
+  } catch (err) {
+    console.error("Error updating status:", err);
+    res.status(500).json({ error: "Failed to update status" });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Payment Service running on port ${PORT}`);
 });
