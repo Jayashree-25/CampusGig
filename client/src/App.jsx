@@ -12,6 +12,8 @@ import Orders from './pages/orders/Orders';
 import Messages from './pages/message/Messages';
 import Message from './pages/message/Message';
 import AddGig from './pages/gig/AddGig';
+import MyGigs from './pages/gig/MyGigs';
+import EditGig from './pages/gig/EditGig';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import Profile from './pages/Profile';
@@ -44,6 +46,8 @@ function App() {
               <Route element={<ProtectedRoute />}>
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/add-gig" element={<AddGig />} />
+                <Route path="/my-gigs" element={<MyGigs />} />
+                <Route path="/edit-gig/:id" element={<EditGig />} />
                 <Route path="/wallet" element={<Wallet />} />
                 <Route path="/orders" element={<Orders />} />
                 <Route path="/messages" element={<Messages />} />
