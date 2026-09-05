@@ -38,6 +38,7 @@ export const AuthProvider = ({ children }) => {
         id: profile.id,
         username: profile.username,
         email: profile.email,
+        created_at: profile.created_at,
       });
       return true;
     } catch {
