@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Zap, User, LogOut, Mail, Settings } from 'lucide-react';
+import { Zap, User, LogOut, Mail, Settings, LayoutGrid } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
@@ -41,6 +41,14 @@ const Navbar = () => {
         <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0">
           {isAuthenticated ? (
             <>
+              <button 
+                onClick={() => navigate('/my-gigs')}
+                className="hidden sm:flex px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-2.5 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-gray-400 hover:bg-cyan-400/10 hover:text-cyan-400 hover:border-cyan-400/30 transition-all font-black text-[8px] sm:text-[9px] md:text-[10px] uppercase tracking-tighter md:tracking-widest"
+              >
+                <LayoutGrid size={12} className="mr-1 sm:mr-1.5 md:mr-2" />
+                My Gigs
+              </button>
+
               <button 
                 onClick={() => navigate('/add-gig')}
                 className="hidden sm:flex px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-2.5 bg-cyan-400/10 border border-cyan-400/20 rounded-lg sm:rounded-xl text-cyan-400 hover:bg-cyan-400 hover:text-black transition-all font-black text-[8px] sm:text-[9px] md:text-[10px] uppercase tracking-tighter md:tracking-widest"
