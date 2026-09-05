@@ -29,9 +29,10 @@ CREATE TABLE IF NOT EXISTS orders (
     gig_id                INTEGER NOT NULL REFERENCES gigs(id) ON DELETE CASCADE,
     client_id             INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     amount                DECIMAL(10,2) NOT NULL,
-    razorpay_order_id     VARCHAR(255) NOT NULL UNIQUE,
+    razorpay_order_id     VARCHAR(255) UNIQUE,
     razorpay_payment_id   VARCHAR(255),
-    status                VARCHAR(50) NOT NULL DEFAULT 'pending'
+    status                VARCHAR(50) NOT NULL DEFAULT 'pending',
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- TABLE 4: wallets
@@ -56,3 +57,10 @@ CREATE TABLE IF NOT EXISTS messages (
     text          TEXT NOT NULL,
     created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ============================================================
+-- MIGRATION: Add columns for Phase 6 order management
+-- Safe to run on existing databases (no-ops if already applied)
+-- ============================================================
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE orders ALTER COLUMN razorpay_order_id DROP NOT NULL;
