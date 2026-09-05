@@ -54,7 +54,21 @@ app.get("/", async (req, res) => {
   }
 });
 
-// 2. GET SINGLE GIG (Public)
+// 2. GET MY GIGS (Authenticated) — must be before /:id
+app.get("/my-gigs", verifyToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT * FROM gigs WHERE freelancer_id = $1",
+      [req.user.id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: "Server Error" });
+  }
+});
+
+// 3. GET SINGLE GIG (Public)
 app.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -69,15 +83,13 @@ app.get("/:id", async (req, res) => {
   }
 });
 
-// 3. CREATE A GIG (Protected + Image Upload)
-// We add 'upload.single("coverImage")' middleware here
+// 4. CREATE A GIG (Protected + Image Upload)
 app.post("/", verifyToken, upload.single("coverImage"), async (req, res) => {
   try {
     const { title, description, price } = req.body;
     const freelancerId = req.user.id;
     
     // Get the image path if a file was uploaded
-    // We store the relative path: "/uploads/filename.jpg"
     const coverImage = req.file ? `/uploads/${req.file.filename}` : null;
 
     // Validation
@@ -95,6 +107,90 @@ app.post("/", verifyToken, upload.single("coverImage"), async (req, res) => {
       gig: newGig.rows[0]
     });
 
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: "Server Error" });
+  }
+});
+
+// 5. UPDATE A GIG (Protected + Ownership)
+app.put("/:id", verifyToken, upload.single("coverImage"), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description, price } = req.body;
+
+    // Fetch existing gig
+    const existing = await pool.query("SELECT * FROM gigs WHERE id = $1", [id]);
+    if (existing.rows.length === 0) {
+      return res.status(404).json({ error: "Gig not found" });
+    }
+
+    const gig = existing.rows[0];
+
+    // Ownership check
+    if (gig.freelancer_id !== req.user.id) {
+      return res.status(403).json({ error: "Not authorized to edit this gig" });
+    }
+
+    // Handle cover image
+    let coverImage = gig.cover_image;
+    if (req.file) {
+      // Delete old image if it exists
+      if (gig.cover_image) {
+        const oldPath = path.join(__dirname, gig.cover_image);
+        if (fs.existsSync(oldPath)) {
+          fs.unlinkSync(oldPath);
+        }
+      }
+      coverImage = `/uploads/${req.file.filename}`;
+    }
+
+    // Validation
+    if (!title || !price) {
+      return res.status(400).json({ error: "Title and Price are required" });
+    }
+
+    const updated = await pool.query(
+      "UPDATE gigs SET title = $1, description = $2, price = $3, cover_image = $4 WHERE id = $5 RETURNING *",
+      [title, description, price, coverImage, id]
+    );
+
+    res.json({ message: "Gig updated successfully!", gig: updated.rows[0] });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: "Server Error" });
+  }
+});
+
+// 6. DELETE A GIG (Protected + Ownership)
+app.delete("/:id", verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Fetch gig
+    const result = await pool.query("SELECT * FROM gigs WHERE id = $1", [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Gig not found" });
+    }
+
+    const gig = result.rows[0];
+
+    // Ownership check
+    if (gig.freelancer_id !== req.user.id) {
+      return res.status(403).json({ error: "Not authorized to delete this gig" });
+    }
+
+    // Delete cover image file if it exists
+    if (gig.cover_image) {
+      const imagePath = path.join(__dirname, gig.cover_image);
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+      }
+    }
+
+    // Delete from database
+    await pool.query("DELETE FROM gigs WHERE id = $1", [id]);
+    res.json({ message: "Gig deleted successfully!" });
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ error: "Server Error" });
